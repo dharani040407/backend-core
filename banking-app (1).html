@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VaultBank — Account Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: #2a2a3d;
+    --accent: #7c5cfc;
+    --accent2: #00e5b0;
+    --danger: #ff4d6d;
+    --warn: #ffa94d;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --card-glow: 0 0 30px rgba(124,92,252,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky; top:0; z-index:100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 22px; letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
+  .status-dot {
+    display:flex; align-items:center; gap:8px;
+    font-size:12px; color: var(--muted);
+  }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--accent2); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; position:relative; z-index:1; }
+
+  /* ── TOAST ── */
+  #toast-container { position:fixed; top:80px; right:24px; z-index:999; display:flex; flex-direction:column; gap:10px; }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 12px 18px; border-radius: 10px;
+    font-size: 13px; min-width: 260px;
+    display:flex; align-items:center; gap:10px;
+    animation: slideIn 0.3s ease; box-shadow: var(--card-glow);
+  }
+  .toast.success { border-left: 3px solid var(--accent2); }
+  .toast.error   { border-left: 3px solid var(--danger); }
+  .toast.info    { border-left: 3px solid var(--accent); }
+  @keyframes slideIn { from{transform:translateX(30px);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes fadeOut { to{opacity:0;transform:translateX(30px)} }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight:600; letter-spacing: 3px;
+    color: var(--muted); text-transform:uppercase; margin-bottom:16px;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+    box-shadow: var(--card-glow);
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(124,92,252,0.3); }
+
+  /* ── GRID ── */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  @media(max-width:700px) { .grid-2,.grid-3{ grid-template-columns:1fr; } }
+
+  /* ── INPUTS ── */
+  .form-group { margin-bottom:16px; }
+  label { display:block; font-size:11px; color:var(--muted); margin-bottom:6px; letter-spacing:1px; text-transform:uppercase; }
+  input, select {
+    width:100%; background:var(--surface2); border:1px solid var(--border);
+    color:var(--text); padding:10px 14px; border-radius:10px;
+    font-family:'DM Mono',monospace; font-size:14px;
+    outline:none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,92,252,0.15);
+  }
+  select option { background: var(--surface2); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 10px 20px; border-radius: 10px; border:none; cursor:pointer;
+    font-family:'Syne',sans-serif; font-weight:600; font-size:13px;
+    letter-spacing:0.5px; transition: all 0.2s; display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover { background:#9175fd; transform:translateY(-1px); box-shadow:0 4px 20px rgba(124,92,252,0.4); }
+  .btn-success { background:var(--accent2); color:#000; }
+  .btn-success:hover { background:#00ffcc; transform:translateY(-1px); }
+  .btn-danger  { background:var(--danger); color:#fff; }
+  .btn-danger:hover  { background:#ff7090; transform:translateY(-1px); }
+  .btn-ghost   { background:transparent; color:var(--muted); border:1px solid var(--border); }
+  .btn-ghost:hover { color:var(--text); border-color:var(--accent); }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; }
+  .btn-sm { padding:6px 14px; font-size:12px; }
+  .btn-full { width:100%; justify-content:center; }
+
+  /* ── BALANCE HERO ── */
+  .balance-hero {
+    background: linear-gradient(135deg, #1a1030 0%, #0f1a2a 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px;
+    position:relative; overflow:hidden;
+  }
+  .balance-hero::before {
+    content:''; position:absolute; top:-60px; right:-60px;
+    width:200px; height:200px; border-radius:50%;
+    background: radial-gradient(circle, rgba(124,92,252,0.2) 0%, transparent 70%);
+  }
+  .balance-label { font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+  .balance-amount {
+    font-family:'Syne',sans-serif; font-size:48px; font-weight:800;
+    color:var(--text); letter-spacing:-2px; line-height:1;
+  }
+  .balance-amount .currency { font-size:24px; color:var(--muted); vertical-align:top; margin-top:8px; display:inline-block; }
+  .balance-id { font-size:12px; color:var(--muted); margin-top:12px; }
+  .balance-actions { display:flex; gap:10px; margin-top:24px; flex-wrap:wrap; }
+
+  /* ── ACCOUNT LIST ── */
+  .account-list { display:flex; flex-direction:column; gap:12px; }
+  .account-item {
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:12px; padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; transition: all 0.2s;
+  }
+  .account-item:hover { border-color:var(--accent); background:rgba(124,92,252,0.05); }
+  .account-item.active { border-color:var(--accent); background:rgba(124,92,252,0.08); }
+  .account-info { display:flex; flex-direction:column; gap:4px; }
+  .account-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:600; }
+  .account-meta { font-size:11px; color:var(--muted); }
+  .account-bal { font-size:18px; font-weight:500; color:var(--accent2); }
+
+  /* ── TRANSACTIONS ── */
+  .tx-list { display:flex; flex-direction:column; gap:8px; }
+  .tx-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; background:var(--surface2);
+    border:1px solid var(--border); border-radius:12px;
+    animation: fadeUp 0.3s ease;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .tx-left { display:flex; align-items:center; gap:12px; }
+  .tx-icon {
+    width:36px; height:36px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .tx-icon.credit { background:rgba(0,229,176,0.12); }
+  .tx-icon.debit  { background:rgba(255,77,109,0.12); }
+  .tx-details { display:flex; flex-direction:column; gap:2px; }
+  .tx-type { font-family:'Syne',sans-serif; font-size:13px; font-weight:600; }
+  .tx-date { font-size:11px; color:var(--muted); }
+  .tx-amount { font-size:16px; font-weight:500; }
+  .tx-amount.credit { color:var(--accent2); }
+  .tx-amount.debit  { color:var(--danger); }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align:center; padding:48px 24px; color:var(--muted); }
+  .empty .empty-icon { font-size:40px; margin-bottom:12px; }
+  .empty p { font-size:13px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(6px); z-index:200;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.2s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:20px; padding:32px; min-width:360px; max-width:90vw;
+    transform:scale(0.95); transition:transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform:scale(1); }
+  .modal-title { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; margin-bottom:24px; }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+  /* ── TABS ── */
+  .tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--surface2); padding:4px; border-radius:12px; }
+  .tab {
+    flex:1; padding:8px; text-align:center; cursor:pointer;
+    border-radius:9px; font-family:'Syne',sans-serif; font-size:13px; font-weight:600;
+    color:var(--muted); transition:all 0.2s; border:none; background:transparent;
+  }
+  .tab.active { background:var(--accent); color:#fff; }
+
+  /* ── STAT CHIPS ── */
+  .chip {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 10px; border-radius:99px; font-size:11px;
+    font-weight:500; letter-spacing:0.5px;
+  }
+  .chip.credit { background:rgba(0,229,176,0.12); color:var(--accent2); }
+  .chip.debit  { background:rgba(255,77,109,0.12); color:var(--danger); }
+
+  /* ── LOADER ── */
+  .spinner {
+    width:20px; height:20px; border:2px solid rgba(255,255,255,0.2);
+    border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* ── DIVIDER ── */
+  .divider { border:none; border-top:1px solid var(--border); margin:20px 0; }
+
+  /* ── CONFIRM BOX ── */
+  .confirm-icon { font-size:36px; text-align:center; margin-bottom:12px; }
+  .confirm-text { text-align:center; color:var(--muted); font-size:13px; margin-bottom:4px; }
+  .confirm-name { text-align:center; font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:16px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Vault<span>Bank</span></div>
+  <div class="status-dot"><div class="dot"></div> API Connected</div>
+</header>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- MODALS -->
+<!-- Create Account -->
+<div class="modal-overlay" id="modal-create">
+  <div class="modal">
+    <div class="modal-title">➕ Create Account</div>
+    <div class="form-group">
+      <label>Account Holder Name</label>
+      <input type="text" id="new-account-name" placeholder="e.g. Ravi Kumar" />
+    </div>
+    <div class="form-group">
+      <label>Initial Balance (₹)</label>
+      <input type="number" id="new-account-balance" placeholder="0.00" min="0" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create')">Cancel</button>
+      <button class="btn btn-primary" onclick="createAccount()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deposit/Withdraw -->
+<div class="modal-overlay" id="modal-txn">
+  <div class="modal">
+    <div class="modal-title" id="modal-txn-title">💰 Deposit</div>
+    <div class="form-group">
+      <label>Amount (₹)</label>
+      <input type="number" id="txn-amount" placeholder="0.00" min="1" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-txn')">Cancel</button>
+      <button class="btn btn-primary" id="modal-txn-btn" onclick="submitTxn()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal">
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-text">You are about to delete</div>
+    <div class="confirm-name" id="delete-account-label">Account #1</div>
+    <div class="confirm-text">This action cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- TOP ROW: Balance Hero + Quick Actions -->
+  <div style="margin-bottom:28px;">
+    <div class="section-title">Selected Account</div>
+    <div class="balance-hero" id="balance-hero">
+      <div class="balance-label">Available Balance</div>
+      <div class="balance-amount" id="hero-balance">
+        <span class="currency">₹</span><span id="hero-amount">—</span>
+      </div>
+      <div class="balance-id" id="hero-id">Select an account to view details</div>
+      <div class="balance-actions">
+        <button class="btn btn-success btn-sm" onclick="openTxnModal('deposit')" id="btn-deposit" disabled>⬆ Deposit</button>
+        <button class="btn btn-ghost btn-sm" onclick="openTxnModal('withdraw')" id="btn-withdraw" disabled>⬇ Withdraw</button>
+        <button class="btn btn-ghost btn-sm" onclick="refreshBalance()" id="btn-refresh" disabled>↻ Refresh</button>
+        <button class="btn btn-danger btn-sm" onclick="openDeleteModal()" id="btn-delete" disabled>🗑 Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNTS + TRANSACTIONS -->
+  <div class="grid-2" style="margin-bottom:28px;">
+
+    <!-- Accounts Panel -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="section-title" style="margin:0">All Accounts</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="loadAllAccounts()">↻</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-create')">+ New</button>
+        </div>
+      </div>
+      <div class="account-list" id="account-list">
+        <div class="empty"><div class="empty-icon">🏦</div><p>Loading accounts…</p></div>
+      </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="section-title" style="margin:0">Transactions</div>
+        <div id="tx-chips" style="display:flex;gap:6px;"></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTxTab('all',this)">All</button>
+        <button class="tab" onclick="switchTxTab('CREDIT',this)">Credits</button>
+        <button class="tab" onclick="switchTxTab('DEBIT',this)">Debits</button>
+      </div>
+      <div class="tx-list" id="tx-list">
+        <div class="empty"><div class="empty-icon">📋</div><p>Select an account to view transactions</p></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  const BASE = 'http://localhost:8080/api';
+  let selectedAccountId = null;
+  let txnMode = 'deposit';
+  let allTransactions = [];
+  let deleteTargetId = null;
+
+  /* ── TOAST ── */
+  function toast(msg, type='info') {
+    const icons = { success:'✅', error:'❌', info:'ℹ️' };
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'fadeOut 0.3s forwards';
+      setTimeout(() => el.remove(), 300);
+    }, 3500);
+  }
+
+  /* ── API ── */
+  async function api(method, path, params={}) {
+    try {
+      let url = BASE + path;
+      if(Object.keys(params).length) {
+        url += '?' + new URLSearchParams(params).toString();
+      }
+      const res = await fetch(url, { method });
+      if(!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || `HTTP ${res.status}`);
+      }
+      const ct = res.headers.get('content-type')||'';
+      if(ct.includes('application/json')) return await res.json();
+      const t = await res.text();
+      return isNaN(t) ? t : parseFloat(t);
+    } catch(e) {
+      throw e;
+    }
+  }
+
+  /* ── MODAL ── */
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+  });
+
+  /* ── ACCOUNTS ── */
+  async function loadAllAccounts() {
+    const list = document.getElementById('account-list');
+    list.innerHTML = `<div class="empty"><div class="spinner" style="margin:0 auto"></div></div>`;
+    try {
+      const accounts = await api('GET', '/accounts/all');
+      if(!accounts || accounts.length === 0) {
+        list.innerHTML = `<div class="empty"><div class="empty-icon">🏦</div><p>No accounts found. Create one!</p></div>`;
+        return;
+      }
+      list.innerHTML = '';
+      accounts.forEach(acc => {
+        const el = document.createElement('div');
+        el.className = 'account-item' + (acc.accountId == selectedAccountId ? ' active' : '');
+        el.innerHTML = `
+          <div class="account-info">
+            <div class="account-name">${acc.name || 'Account #'+acc.accountId}</div>
+            <div class="account-meta">ID: ${acc.accountId}</div>
+          </div>
+          <div class="account-bal">₹${fmt(acc.balance)}</div>`;
+        el.onclick = () => selectAccount(acc.accountId, acc.name || 'Account #'+acc.accountId);
+        list.appendChild(el);
+      });
+    } catch(e) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Failed to load: ${e.message}</p></div>`;
+      toast('Failed to load accounts: ' + e.message, 'error');
+    }
+  }
+
+  async function selectAccount(id, name) {
+    selectedAccountId = id;
+    document.querySelectorAll('.account-item').forEach(el => el.classList.remove('active'));
+    event && event.currentTarget && event.currentTarget.classList.add('active');
+
+    // enable buttons
+    ['btn-deposit','btn-withdraw','btn-refresh','btn-delete'].forEach(b => {
+      document.getElementById(b).disabled = false;
+    });
+
+    document.getElementById('hero-id').textContent = `${name}  ·  Account #${id}`;
+    document.getElementById('hero-amount').textContent = '…';
+
+    await Promise.all([refreshBalance(), loadTransactions('all')]);
+    document.querySelectorAll('.account-item').forEach(el => {
+      el.classList.toggle('active', el.querySelector('.account-meta')?.textContent === `ID: ${id}`);
+    });
+  }
+
+  async function refreshBalance() {
+    if(!selectedAccountId) return;
+    try {
+      const balance = await api('GET', `/accounts/${selectedAccountId}/balance`);
+      document.getElementById('hero-amount').textContent = fmt(balance);
+    } catch(e) {
+      toast('Balance refresh failed: ' + e.message, 'error');
+    }
+  }
+
+  async function createAccount() {
+    const name = document.getElementById('new-account-name').value.trim();
+    const balance = document.getElementById('new-account-balance').value;
+    if(!name) { toast('Enter account holder name', 'error'); return; }
+    try {
+      const res = await fetch(`${BASE}/accounts/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name,
+          balance: parseFloat(balance || 0),
+          address: ""
+        })
+      });
+      if(!res.ok) throw new Error(await res.text());
+      toast(`Account created for ${name}`, 'success');
+      closeModal('modal-create');
+      document.getElementById('new-account-name').value = '';
+      document.getElementById('new-account-balance').value = '';
+      await loadAllAccounts();
+    } catch(e) {
+      toast('Failed: ' + e.message, 'error');
+    }
+  }
+
+  /* ── DELETE ── */
+  function openDeleteModal() {
+    if(!selectedAccountId) return;
+    deleteTargetId = selectedAccountId;
+    document.getElementById('delete-account-label').textContent = document.getElementById('hero-id').textContent;
+    openModal('modal-delete');
+  }
+
+  async function confirmDelete() {
+    try {
+      await api('DELETE', `/accounts/${deleteTargetId}/delete`);
+      toast('Account deleted', 'success');
+      closeModal('modal-delete');
+      selectedAccountId = null;
+      deleteTargetId = null;
+      document.getElementById('hero-amount').textContent = '—';
+      document.getElementById('hero-id').textContent = 'Select an account to view details';
+      ['btn-deposit','btn-withdraw','btn-refresh','btn-delete'].forEach(b => {
+        document.getElementById(b).disabled = true;
+      });
+      document.getElementById('tx-list').innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>Select an account</p></div>`;
+      await loadAllAccounts();
+    } catch(e) {
+      toast('Delete failed: ' + e.message, 'error');
+    }
+  }
+
+  /* ── TRANSACTIONS ── */
+  function openTxnModal(mode) {
+    txnMode = mode;
+    const isDeposit = mode === 'deposit';
+    document.getElementById('modal-txn-title').textContent = isDeposit ? '⬆️ Deposit Funds' : '⬇️ Withdraw Funds';
+    document.getElementById('modal-txn-btn').className = `btn ${isDeposit ? 'btn-success' : 'btn-danger'}`;
+    document.getElementById('modal-txn-btn').textContent = isDeposit ? 'Deposit' : 'Withdraw';
+    document.getElementById('txn-amount').value = '';
+    openModal('modal-txn');
+  }
+
+  async function submitTxn() {
+    const amount = parseFloat(document.getElementById('txn-amount').value);
+    if(!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+    const endpoint = txnMode === 'deposit' ? 'deposit' : 'withdraw';
+    try {
+      await api('PUT', `/accounts/${selectedAccountId}/${endpoint}`, { amount });
+      toast(`${txnMode === 'deposit' ? 'Deposited' : 'Withdrawn'} ₹${fmt(amount)} successfully`, 'success');
+      closeModal('modal-txn');
+      await refreshBalance();
+      await loadTransactions(currentTxTab);
+      await loadAllAccounts();
+    } catch(e) {
+      toast(`Transaction failed: ${e.message}`, 'error');
+    }
+  }
+
+  let currentTxTab = 'all';
+
+  async function loadTransactions(type) {
+    currentTxTab = type;
+    const list = document.getElementById('tx-list');
+    list.innerHTML = `<div class="empty"><div class="spinner" style="margin:0 auto"></div></div>`;
+    if(!selectedAccountId) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><p>Select an account</p></div>`;
+      return;
+    }
+    try {
+      let txns;
+      if(type === 'all') {
+        txns = await api('GET', `/transactions/${selectedAccountId}/history`);
+      } else {
+        txns = await api('GET', `/transactions/${selectedAccountId}/type`, { type });
+      }
+      allTransactions = txns || [];
+      renderTransactions(allTransactions);
+      updateChips(allTransactions);
+    } catch(e) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>${e.message}</p></div>`;
+    }
+  }
+
+  function renderTransactions(txns) {
+    const list = document.getElementById('tx-list');
+    if(!txns || txns.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">💸</div><p>No transactions found</p></div>`;
+      return;
+    }
+    list.innerHTML = '';
+    txns.slice().reverse().forEach(tx => {
+      const isCredit = (tx.type || '').toUpperCase() === 'CREDIT';
+      const el = document.createElement('div');
+      el.className = 'tx-item';
+      el.innerHTML = `
+        <div class="tx-left">
+          <div class="tx-icon ${isCredit?'credit':'debit'}">${isCredit?'⬆️':'⬇️'}</div>
+          <div class="tx-details">
+            <div class="tx-type">${isCredit ? 'Credit' : 'Debit'}</div>
+            <div class="tx-date">${tx.details || '—'}</div>
+          </div>
+        </div>
+        <div class="tx-amount ${isCredit?'credit':'debit'}">${isCredit?'+':'-'}₹${fmt(tx.amount)}</div>`;
+      list.appendChild(el);
+    });
+  }
+
+  function updateChips(txns) {
+    const credits = txns.filter(t => (t.type||'').toUpperCase()==='CREDIT').length;
+    const debits  = txns.filter(t => (t.type||'').toUpperCase()==='DEBIT').length;
+    document.getElementById('tx-chips').innerHTML = `
+      <span class="chip credit">↑ ${credits}</span>
+      <span class="chip debit">↓ ${debits}</span>`;
+  }
+
+  function switchTxTab(type, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    loadTransactions(type);
+  }
+
+  /* ── HELPERS ── */
+  function fmt(n) {
+    return parseFloat(n||0).toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+
+  /* ── INIT ── */
+  loadAllAccounts();
+</script>
+</body>
+</html>
