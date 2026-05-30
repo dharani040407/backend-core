@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.codewith.Entities.Transaction;
+import com.codewith.secondapi.Entities.Transaction;
 import com.codewith.secondapi.service.AccountService;
 
 import java.util.List;

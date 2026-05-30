@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codewith.Entities.Account;
-import com.codewith.Entities.Transaction;
+import com.codewith.secondapi.Entities.Account;
+import com.codewith.secondapi.Entities.Transaction;
 import com.codewith.secondapi.repository.AccountRepository;
 import com.codewith.secondapi.repository.TransactionRepository;
 
@@ -27,8 +27,8 @@ public class AccountServiceimpl implements AccountService {
     @Override
     public Account createAccount(Account account) {
         // Check if account already exists with same name
-        if (accountRepository.existsByName(account.getName())) {
-            throw new RuntimeException("Account already exists with name: " + account.getName());
+        if (accountRepository.existsById(account.getAccountId())) {
+            throw new RuntimeException("Account already exists with Id: " + account.getAccountId());
         }
 
         // Set initial balance to 0 if not provided

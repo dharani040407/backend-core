@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.codewith.secondapi.Entities.*;
+
 import java.util.List;
-import com.codewith.Entities.*;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 

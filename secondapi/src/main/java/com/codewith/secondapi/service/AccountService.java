@@ -1,6 +1,7 @@
 package com.codewith.secondapi.service;
-import com.codewith.Entities.*;
 import java.util.List;
+
+import com.codewith.secondapi.Entities.*;
 
 
 public interface AccountService {
@@ -13,4 +14,5 @@ public interface AccountService {
     List<Transaction> getTransactionsByType(Long accountId, String type);
     Double getTotalBalance(Long accountId);
     void deleteAccount(Long accountId);
+    //Authen findEmail(String email);
 }

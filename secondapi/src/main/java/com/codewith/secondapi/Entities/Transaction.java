@@ -1,4 +1,4 @@
-package com.codewith.Entities;
+package com.codewith.secondapi.Entities;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 //import com.fasterxml.jackson.annotation.JsonManagedReference;
 

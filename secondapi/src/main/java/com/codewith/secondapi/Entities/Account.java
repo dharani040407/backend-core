@@ -1,4 +1,4 @@
-package com.codewith.Entities;
+package com.codewith.secondapi.Entities;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 public class Account {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "account_id", nullable = false)
     private Long accountId;
 
