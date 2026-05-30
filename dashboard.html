@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>VaultBank — Account Manager</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+
+:root{
+  --bg:#09090f;
+  --card:#13131d;
+  --card2:#1b1b29;
+  --line:#2d2d44;
+  --purple:#7c5cff;
+  --green:#00d89e;
+  --red:#ff5470;
+  --text:#f5f5ff;
+  --muted:#8f90aa;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  min-height:100vh;
+  background:
+  radial-gradient(circle at top left,#1d1637 0%,#09090f 45%);
+  color:var(--text);
+  font-family:'DM Mono', monospace;
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(9,9,15,0.85);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--line);
+  padding:18px 32px;
+}
+
+.logo{
+  font-family:'Syne', sans-serif;
+  font-size:24px;
+  font-weight:800;
+}
+
+.logo span{
+  color:var(--purple);
+}
+
+.container{
+  max-width:1150px;
+  margin:auto;
+  padding:30px 22px;
+}
+
+.operations-panel{
+  display:grid;
+  grid-template-columns:1.2fr 0.8fr;
+  gap:24px;
+  margin-bottom:28px;
+}
+
+@media(max-width:850px){
+  .operations-panel{
+    grid-template-columns:1fr;
+  }
+}
+
+.operations-left,
+.operations-right{
+  background:rgba(19,19,29,0.9);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:28px;
+}
+
+.panel-title{
+  font-family:'Syne', sans-serif;
+  font-size:13px;
+  letter-spacing:4px;
+  color:var(--muted);
+  margin-bottom:28px;
+}
+
+.account-input-box label{
+  display:block;
+  margin-bottom:10px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.account-input-row{
+  display:flex;
+  gap:12px;
+}
+
+.account-input-row input{
+  flex:1;
+  height:54px;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:var(--card2);
+  color:var(--text);
+  padding:0 18px;
+  font-size:15px;
+  outline:none;
+}
+
+.quick-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  margin-top:28px;
+}
+
+.action-btn{
+  border:none;
+  height:50px;
+  padding:0 22px;
+  border-radius:16px;
+  font-family:'Syne', sans-serif;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.action-btn:hover{
+  transform:translateY(-2px);
+}
+
+.action-btn.purple{
+  background:var(--purple);
+  color:white;
+}
+
+.action-btn.green{
+  background:var(--green);
+  color:black;
+}
+
+.action-btn.red{
+  background:var(--red);
+  color:white;
+}
+
+.action-btn.dark{
+  background:transparent;
+  border:1px solid var(--line);
+  color:var(--text);
+}
+
+.balance-card-new{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.balance-small{
+  color:var(--muted);
+  letter-spacing:3px;
+  font-size:12px;
+  margin-bottom:14px;
+}
+
+.balance-big{
+  font-family:'Syne', sans-serif;
+  font-size:58px;
+  font-weight:800;
+}
+
+.account-show{
+  margin-top:18px;
+  color:var(--muted);
+}
+
+.card{
+  background:rgba(19,19,29,0.9);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:26px;
+}
+
+.section-title{
+  font-family:'Syne', sans-serif;
+  font-size:12px;
+  letter-spacing:3px;
+  color:var(--muted);
+  margin-bottom:20px;
+}
+
+.tabs{
+  display:flex;
+  gap:6px;
+  background:var(--card2);
+  padding:5px;
+  border-radius:16px;
+  margin-bottom:22px;
+}
+
+.tab{
+  flex:1;
+  border:none;
+  background:transparent;
+  color:var(--muted);
+  padding:12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-family:'Syne', sans-serif;
+  font-weight:700;
+}
+
+.tab.active{
+  background:var(--purple);
+  color:white;
+}
+
+.tx-list{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.tx-item{
+  background:var(--card2);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.tx-left{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.tx-icon{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.credit-bg{
+  background:rgba(0,216,158,0.14);
+}
+
+.debit-bg{
+  background:rgba(255,84,112,0.14);
+}
+
+.credit{
+  color:var(--green);
+}
+
+.debit{
+  color:var(--red);
+}
+
+.empty{
+  text-align:center;
+  padding:40px;
+  color:var(--muted);
+}
+
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:0.2s;
+  z-index:500;
+}
+
+.modal-overlay.open{
+  opacity:1;
+  pointer-events:all;
+}
+
+.modal{
+  width:400px;
+  max-width:90%;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:30px;
+}
+
+.modal-title{
+  font-family:'Syne', sans-serif;
+  font-size:24px;
+  font-weight:800;
+  margin-bottom:24px;
+}
+
+.form-group{
+  margin-bottom:18px;
+}
+
+.form-group label{
+  display:block;
+  margin-bottom:8px;
+  color:var(--muted);
+}
+
+.form-group input{
+  width:100%;
+  height:52px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:var(--card2);
+  color:var(--text);
+  padding:0 16px;
+  outline:none;
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:22px;
+}
+
+.btn{
+  border:none;
+  cursor:pointer;
+  border-radius:14px;
+  padding:12px 18px;
+  font-family:'Syne', sans-serif;
+  font-weight:700;
+}
+
+.btn-success{
+  background:var(--green);
+  color:black;
+}
+
+.btn-danger{
+  background:var(--red);
+  color:white;
+}
+
+.btn-primary{
+  background:var(--purple);
+  color:white;
+}
+
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--line);
+  color:white;
+}
+
+#create-account-btn{
+  margin-bottom:28px;
+}
+
+#toast-container{
+  position:fixed;
+  top:80px;
+  right:20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:999;
+}
+
+.toast{
+  min-width:240px;
+  padding:14px 18px;
+  border-radius:14px;
+  background:var(--card2);
+  border:1px solid var(--line);
+}
+
+.toast.success{
+  border-left:4px solid var(--green);
+}
+
+.toast.error{
+  border-left:4px solid var(--red);
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    Vault<span>Bank</span>
+  </div>
+</header>
+
+<div id="toast-container"></div>
+
+<!-- CREATE ACCOUNT MODAL -->
+
+<div class="modal-overlay" id="modal-create">
+
+  <div class="modal">
+
+    <div class="modal-title">
+      Create Account
+    </div>
+
+    <div class="form-group">
+      <label>Account ID</label>
+
+      <input
+        type="number"
+        id="new-account-id"
+        placeholder="Ex: 1001">
+    </div>
+
+    <div class="form-group">
+      <label>Name</label>
+
+      <input
+        type="text"
+        id="new-account-name">
+    </div>
+
+    <div class="form-group">
+      <label>Initial Balance</label>
+
+      <input
+        type="number"
+        id="new-account-balance">
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-ghost"
+        onclick="closeModal('modal-create')">
+        Cancel
+      </button>
+
+      <button
+        class="btn btn-primary"
+        onclick="createAccount()">
+        Create
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- TRANSACTION MODAL -->
+
+<div class="modal-overlay" id="modal-txn">
+
+  <div class="modal">
+
+    <div class="modal-title" id="modal-txn-title">
+      Deposit
+    </div>
+
+    <div class="form-group">
+
+      <label>Amount</label>
+
+      <input
+        type="number"
+        id="txn-amount">
+
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        class="btn btn-ghost"
+        onclick="closeModal('modal-txn')">
+        Cancel
+      </button>
+
+      <button
+        class="btn btn-primary"
+        id="modal-txn-btn"
+        onclick="submitTxn()">
+        Confirm
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="container">
+
+  <!-- TOP PANEL -->
+
+  <div class="operations-panel">
+
+    <div class="operations-left">
+
+      <div class="panel-title">
+        ACCOUNT OPERATIONS
+      </div>
+
+      <div class="account-input-box">
+
+        <label>
+          Enter Account ID
+        </label>
+
+        <div class="account-input-row">
+
+          <input
+            type="number"
+            id="global-account-id"
+            placeholder="Ex: 1001">
+
+          <button
+            class="action-btn purple"
+            onclick="connectAccount()">
+            Connect
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="quick-actions">
+
+        <button
+          class="action-btn green"
+          onclick="openTxnModal('deposit')">
+          Deposit
+        </button>
+
+        <button
+          class="action-btn red"
+          onclick="openTxnModal('withdraw')">
+          Withdraw
+        </button>
+
+        <button
+          class="action-btn dark"
+          onclick="refreshBalance()">
+          Refresh
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="operations-right">
+
+      <div class="balance-card-new">
+
+        <div class="balance-small">
+          CURRENT BALANCE
+        </div>
+
+        <div class="balance-big">
+          ₹<span id="hero-amount">0.00</span>
+        </div>
+
+        <div class="account-show" id="hero-id">
+          No Account Connected
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- CREATE BUTTON -->
+
+  <button
+    id="create-account-btn"
+    class="action-btn purple"
+    onclick="openModal('modal-create')">
+
+    + Create New Account
+
+  </button>
+
+  <!-- TRANSACTIONS -->
+
+  <div class="card">
+
+    <div class="section-title">
+      TRANSACTIONS
+    </div>
+
+    <div class="tabs">
+
+      <button
+        class="tab active"
+        onclick="switchTxTab('all',this)">
+        All
+      </button>
+
+      <button
+        class="tab"
+        onclick="switchTxTab('CREDIT',this)">
+        Credits
+      </button>
+
+      <button
+        class="tab"
+        onclick="switchTxTab('DEBIT',this)">
+        Debits
+      </button>
+
+    </div>
+
+    <div class="tx-list" id="tx-list">
+
+      <div class="empty">
+        Connect account to view transactions
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const BASE =
+'http://localhost:8080/api';
+
+let selectedAccountId = null;
+
+let txnMode = 'deposit';
+
+let currentTxTab = 'all';
+
+function toast(msg,type='success'){
+
+  const el =
+  document.createElement('div');
+
+  el.className =
+  `toast ${type}`;
+
+  el.innerHTML = msg;
+
+  document
+  .getElementById('toast-container')
+  .appendChild(el);
+
+  setTimeout(() => {
+    el.remove();
+  },3000);
+}
+
+async function api(
+  method,
+  path,
+  params={}
+){
+
+  let url =
+  BASE + path;
+
+  if(
+    Object.keys(params).length
+  ){
+
+    url += '?' +
+    new URLSearchParams(params)
+    .toString();
+  }
+
+  const res =
+  await fetch(url,{method});
+
+  if(!res.ok){
+
+    throw new Error(
+      await res.text()
+    );
+  }
+
+  const ct =
+  res.headers.get('content-type')
+  || '';
+
+  if(
+    ct.includes(
+      'application/json'
+    )
+  ){
+    return await res.json();
+  }
+
+  const t =
+  await res.text();
+
+  return isNaN(t)
+  ? t
+  : parseFloat(t);
+}
+
+function openModal(id){
+
+  document
+  .getElementById(id)
+  .classList.add('open');
+}
+
+function closeModal(id){
+
+  document
+  .getElementById(id)
+  .classList.remove('open');
+}
+
+document
+.querySelectorAll('.modal-overlay')
+.forEach(m => {
+
+  m.addEventListener(
+    'click',
+    e => {
+
+      if(e.target === m){
+
+        m.classList.remove(
+          'open'
+        );
+      }
+    }
+  );
+});
+
+async function connectAccount(){
+
+  const id =
+  document
+  .getElementById(
+    'global-account-id'
+  ).value;
+
+  if(!id){
+
+    toast(
+      'Enter account id',
+      'error'
+    );
+
+    return;
+  }
+
+  try{
+
+    const accounts =
+    await api(
+      'GET',
+      '/accounts/all'
+    );
+
+    const acc =
+    accounts.find(
+      a => a.accountId == id
+    );
+
+    if(!acc){
+
+      toast(
+        'Account not found',
+        'error'
+      );
+
+      return;
+    }
+
+    selectedAccountId =
+    acc.accountId;
+
+    document
+    .getElementById(
+      'hero-id'
+    ).textContent =
+    `${acc.name} · Account #${acc.accountId}`;
+
+    toast(
+      'Account connected',
+      'success'
+    );
+
+    await refreshBalance();
+
+    await loadTransactions(
+      currentTxTab
+    );
+
+  }catch(e){
+
+    toast(
+      e.message,
+      'error'
+    );
+  }
+}
+
+async function refreshBalance(){
+
+  if(!selectedAccountId){
+
+    toast(
+      'Connect account first',
+      'error'
+    );
+
+    return;
+  }
+
+  try{
+
+    const balance =
+    await api(
+      'GET',
+      `/accounts/${selectedAccountId}/balance`
+    );
+
+    document
+    .getElementById(
+      'hero-amount'
+    ).textContent =
+    fmt(balance);
+
+  }catch(e){
+
+    toast(
+      'Balance failed',
+      'error'
+    );
+  }
+}
+
+function openTxnModal(mode){
+
+  if(!selectedAccountId){
+
+    toast(
+      'Connect account first',
+      'error'
+    );
+
+    return;
+  }
+
+  txnMode = mode;
+
+  const isDeposit =
+  mode === 'deposit';
+
+  document
+  .getElementById(
+    'modal-txn-title'
+  ).textContent =
+  isDeposit
+  ? 'Deposit Funds'
+  : 'Withdraw Funds';
+
+  document
+  .getElementById(
+    'modal-txn-btn'
+  ).className =
+  `btn ${
+    isDeposit
+    ? 'btn-success'
+    : 'btn-danger'
+  }`;
+
+  document
+  .getElementById(
+    'txn-amount'
+  ).value = '';
+
+  openModal('modal-txn');
+}
+
+async function submitTxn(){
+
+  const amount =
+  parseFloat(
+    document
+    .getElementById(
+      'txn-amount'
+    ).value
+  );
+
+  if(
+    !amount ||
+    amount <= 0
+  ){
+
+    toast(
+      'Enter valid amount',
+      'error'
+    );
+
+    return;
+  }
+
+  const endpoint =
+  txnMode === 'deposit'
+  ? 'deposit'
+  : 'withdraw';
+
+  try{
+
+    await api(
+      'PUT',
+      `/accounts/${selectedAccountId}/${endpoint}`,
+      {amount}
+    );
+
+    toast(
+      `${txnMode} successful`
+    );
+
+    closeModal(
+      'modal-txn'
+    );
+
+    await refreshBalance();
+
+    await loadTransactions(
+      currentTxTab
+    );
+
+  }catch(e){
+
+    toast(
+      e.message,
+      'error'
+    );
+  }
+}
+
+async function loadTransactions(type){
+
+  if(!selectedAccountId)
+  return;
+
+  currentTxTab = type;
+
+  const list =
+  document.getElementById(
+    'tx-list'
+  );
+
+  list.innerHTML =
+  `<div class="empty">
+    Loading...
+  </div>`;
+
+  try{
+
+    let txns;
+
+    if(type === 'all'){
+
+      txns =
+      await api(
+        'GET',
+        `/transactions/${selectedAccountId}/history`
+      );
+
+    }else{
+
+      txns =
+      await api(
+        'GET',
+        `/transactions/${selectedAccountId}/type`,
+        {type}
+      );
+    }
+
+    renderTransactions(
+      txns || []
+    );
+
+  }catch(e){
+
+    list.innerHTML =
+    `<div class="empty">
+      Failed to load
+    </div>`;
+  }
+}
+
+function renderTransactions(txns){
+
+  const list =
+  document.getElementById(
+    'tx-list'
+  );
+
+  if(txns.length === 0){
+
+    list.innerHTML =
+    `<div class="empty">
+      No transactions
+    </div>`;
+
+    return;
+  }
+
+  list.innerHTML = '';
+
+  txns
+  .slice()
+  .reverse()
+  .forEach(tx => {
+
+    const isCredit =
+    (
+      tx.type || ''
+    ).toUpperCase()
+    === 'CREDIT';
+
+    const el =
+    document.createElement(
+      'div'
+    );
+
+    el.className =
+    'tx-item';
+
+    el.innerHTML = `
+      <div class="tx-left">
+
+        <div class="tx-icon ${
+          isCredit
+          ? 'credit-bg'
+          : 'debit-bg'
+        }">
+
+          ${
+            isCredit
+            ? '⬆️'
+            : '⬇️'
+          }
+
+        </div>
+
+        <div>
+
+          <div>
+            ${
+              isCredit
+              ? 'Credit'
+              : 'Debit'
+            }
+          </div>
+
+          <small style="color:gray">
+            ${tx.details || ''}
+          </small>
+
+        </div>
+
+      </div>
+
+      <div class="${
+        isCredit
+        ? 'credit'
+        : 'debit'
+      }">
+
+        ${
+          isCredit
+          ? '+'
+          : '-'
+        }
+
+        ₹${fmt(tx.amount)}
+
+      </div>
+    `;
+
+    list.appendChild(el);
+  });
+}
+
+function switchTxTab(type,el){
+
+  document
+  .querySelectorAll('.tab')
+  .forEach(t => {
+
+    t.classList.remove(
+      'active'
+    );
+  });
+
+  el.classList.add('active');
+
+  loadTransactions(type);
+}
+
+async function createAccount(){
+
+  const accountId =
+  document
+  .getElementById(
+    'new-account-id'
+  ).value;
+
+  const name =
+  document
+  .getElementById(
+    'new-account-name'
+  )
+  .value
+  .trim();
+
+  const balance =
+  document
+  .getElementById(
+    'new-account-balance'
+  ).value;
+
+  if(!accountId){
+
+    toast(
+      'Enter account id',
+      'error'
+    );
+
+    return;
+  }
+
+  if(!name){
+
+    toast(
+      'Enter name',
+      'error'
+    );
+
+    return;
+  }
+
+  try{
+
+    const res =
+    await fetch(
+      `${BASE}/accounts/create`,
+      {
+
+        method:'POST',
+
+        headers:{
+          'Content-Type':
+          'application/json'
+        },
+
+        body:JSON.stringify({
+
+          accountId:
+          parseInt(accountId),
+
+          name:name,
+
+          balance:
+          parseFloat(
+            balance || 0
+          ),
+
+          address:""
+        })
+      }
+    );
+if(!res.ok){
+
+  const errorText =
+  await res.text();
+
+  if(
+    errorText.includes(
+      'already exists'
+    )
+  ){
+
+    throw new Error(
+      'Account ID already exists'
+    );
+  }
+
+  throw new Error(
+    'Unable to create account'
+  );
+}
+
+    toast(
+      'Account created'
+    );
+
+    closeModal(
+      'modal-create'
+    );
+
+    document
+    .getElementById(
+      'new-account-id'
+    ).value = '';
+
+    document
+    .getElementById(
+      'new-account-name'
+    ).value = '';
+
+    document
+    .getElementById(
+      'new-account-balance'
+    ).value = '';
+
+  }catch(e){
+
+    toast(
+      e.message,
+      'error'
+    );
+  }
+}
+
+function fmt(n){
+
+  return parseFloat(n || 0)
+  .toLocaleString(
+    'en-IN',
+    {
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    }
+  );
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VaultBank — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #09090f;
+  --card: #13131d;
+  --card2: #1b1b29;
+  --line: #2d2d44;
+  --purple: #7c5cff;
+  --green: #00d89e;
+  --red: #ff5470;
+  --text: #f5f5ff;
+  --muted: #8f90aa;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, #1d1637 0%, #09090f 45%);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(19,19,29,0.95);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 40px 36px;
+  margin: 24px;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 32px;
+  text-align: center;
+}
+.logo span { color: var(--purple); }
+.tabs {
+  display: flex;
+  background: var(--card2);
+  border-radius: 16px;
+  padding: 5px;
+  gap: 5px;
+  margin-bottom: 32px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 11px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  transition: 0.2s;
+}
+.tab-btn.active {
+  background: var(--purple);
+  color: white;
+}
+.field { margin-bottom: 18px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+.field input {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--card2);
+  color: var(--text);
+  padding: 0 18px;
+  font-size: 15px;
+  font-family: 'DM Mono', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field input:focus { border-color: var(--purple); }
+.submit-btn {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: var(--purple);
+  color: white;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.submit-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.msg {
+  font-size: 13px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  display: none;
+  text-align: center;
+}
+.msg.error {
+  background: rgba(255,84,112,0.12);
+  border: 1px solid rgba(255,84,112,0.3);
+  color: var(--red);
+  display: block;
+}
+.msg.success {
+  background: rgba(0,216,158,0.12);
+  border: 1px solid rgba(0,216,158,0.3);
+  color: var(--green);
+  display: block;
+}
+.panel { display: none; }
+.panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="auth-card">
+
+  <div class="logo">Vault<span>Bank</span></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+    <button class="tab-btn" onclick="switchTab('signup')">Sign up</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="login-panel" class="panel active">
+    <div class="field">
+      <label>EMAIL ADDRESS</label>
+      <input type="email" id="login-email" placeholder="you@example.com"/>
+    </div>
+    <div class="field">
+      <label>PIN</label>
+      <input type="password" id="login-pin" placeholder="Enter your PIN"/>
+    </div>
+    <button class="submit-btn" onclick="handleLogin()">Login</button>
+    <div id="login-msg" class="msg"></div>
+  </div>
+
+  <!-- SIGNUP -->
+  <div id="signup-panel" class="panel">
+    <div class="field">
+      <label>EMAIL ADDRESS</label>
+      <input type="email" id="signup-email" placeholder="you@example.com"/>
+    </div>
+    <div class="field">
+      <label>PIN</label>
+      <input type="password" id="signup-pin" placeholder="Create a PIN"/>
+    </div>
+    <button class="submit-btn" onclick="handleSignup()">Create Account</button>
+    <div id="signup-msg" class="msg"></div>
+  </div>
+
+</div>
+
+<script>
+const BASE = 'http://localhost:8080';
+
+// If already logged in, skip login
+if (localStorage.getItem('email')) {
+  window.location.href = 'dashboard.html';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) =>
+    b.classList.toggle('active', (i === 0) === (tab === 'login')));
+  document.getElementById('login-panel').classList.toggle('active', tab === 'login');
+  document.getElementById('signup-panel').classList.toggle('active', tab === 'signup');
+}
+
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + type;
+}
+
+// POST /api/login/verfiy  →  { email, pin }
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pin   = document.getElementById('login-pin').value.trim();
+
+  if (!email || !pin) return showMsg('login-msg', 'Please fill in all fields.', 'error');
+
+  try {
+    const res = await fetch(`${BASE}/api/login/verfiy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, pin })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('email', data.email);
+      showMsg('login-msg', 'Login successful! Redirecting...', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 1000);
+    } else {
+      const text = await res.text();
+      if (text.includes('Wrong pin')) {
+        showMsg('login-msg', 'Wrong PIN. Please try again.', 'error');
+      } else if (text.includes('Email not found')) {
+        showMsg('login-msg', 'No account found with this email.', 'error');
+      } else {
+        showMsg('login-msg', 'Login failed. Check your details.', 'error');
+      }
+    }
+  } catch (e) {
+    showMsg('login-msg', 'Cannot reach server. Please try again.', 'error');
+  }
+}
+
+// POST /api/login/signup  →  { email, pin }
+async function handleSignup() {
+  const email = document.getElementById('signup-email').value.trim();
+  const pin   = document.getElementById('signup-pin').value.trim();
+
+  if (!email || !pin) return showMsg('signup-msg', 'Please fill in all fields.', 'error');
+
+  try {
+    const res = await fetch(`${BASE}/api/login/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, pin })
+    });
+
+    if (res.ok) {
+      showMsg('signup-msg', 'Account created! You can now log in.', 'success');
+      setTimeout(() => switchTab('login'), 1500);
+    } else {
+      showMsg('signup-msg', 'Signup failed. Email may already exist.', 'error');
+    }
+  } catch (e) {
+    showMsg('signup-msg', 'Cannot reach server. Please try again.', 'error');
+  }
+}
+</script>
+
+</body>
+</html>
